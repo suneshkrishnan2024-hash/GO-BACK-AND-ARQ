@@ -609,8 +609,7 @@
 
   // ---------- Utils ----------
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
-  const setTxt = (sel, txt) => { const n=document.querySelector(sel); if(n) n.textContent=txt; };
-
+ 
   // ---------- Controls ----------
   startBtn.addEventListener("click", async ()=>{
     if(running) return;
