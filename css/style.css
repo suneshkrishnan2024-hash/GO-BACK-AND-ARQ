@@ -1,55 +1,63 @@
-/* Go-Back-N ARQ — Frosted Light Glorious Edition ✨ */
-/* Created for Sunesh Krishnan N & Aravind G | Guided by Dr. Swaminathan Annadurai */
+/* Go-Back-N ARQ — Frosted Light v3 🌤️ */
+/* Real frosted look with visible glass blur and blue gradient */
 
 * {
   box-sizing: border-box;
-  font-family: "Segoe UI", sans-serif;
+  font-family: "Segoe UI", "Roboto", sans-serif;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background: linear-gradient(180deg, #eef3f9 0%, #f7fafc 100%);
-  color: #0b1e2b;
-  overflow-x: hidden;
   min-height: 100vh;
+  color: #0b1e2b;
+  background: linear-gradient(135deg, #c9e0ff 0%, #f1f6ff 40%, #ffffff 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
 }
 
-/* GLASS effect */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
+/* Background layer for visible frost contrast */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(96,168,255,0.25), transparent 60%),
+              radial-gradient(circle at bottom right, rgba(183,215,255,0.3), transparent 70%);
+  z-index: -1;
+}
+
+/* Frosted glass effect */
+.glass, header, section {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-/* Header */
+/* Header styling */
 header {
-  background: rgba(255, 255, 255, 0.55);
-  border-radius: 20px;
-  padding: 22px 24px;
-  margin: 20px auto;
+  padding: 24px;
+  margin: 22px auto;
   max-width: 1100px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 header h1 {
-  margin: 0 0 4px;
-  color: #0b1e2b;
-  font-size: 26px;
+  margin: 0;
+  font-size: 28px;
   font-weight: 700;
+  color: #0b1e2b;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 header p {
-  margin: 0 0 14px;
-  color: #314a5a;
+  margin: 6px 0 16px;
+  color: #324b5e;
   font-size: 15px;
 }
 
-/* Controls layout */
+/* Controls grid */
 .controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -60,7 +68,7 @@ header p {
   display: flex;
   flex-direction: column;
   font-size: 14px;
-  color: #233646;
+  color: #1b2f41;
 }
 
 .controls input,
@@ -69,17 +77,16 @@ header p {
   padding: 6px 10px;
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.8);
   color: #0b1e2b;
   font-size: 14px;
-  outline: none;
-  transition: border 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .controls input:focus,
 .controls select:focus {
   border-color: #2a6bff;
-  box-shadow: 0 0 0 2px rgba(42, 107, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(42, 107, 255, 0.2);
 }
 
 /* Sliders */
@@ -90,20 +97,20 @@ input[type="range"] {
 
 /* Buttons */
 button {
-  background: #0b1e2b;
-  color: #ffffff;
+  background: linear-gradient(90deg, #2a6bff, #4a8cff);
+  color: #fff;
   border: none;
   border-radius: 10px;
   padding: 8px 16px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 button:hover {
-  background: #1f3a54;
   transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(42, 107, 255, 0.25);
 }
 
 button:active {
@@ -122,72 +129,66 @@ button:disabled {
   height: 750px;
   transition: height 0.4s ease;
   scroll-behavior: smooth;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 16px;
-  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
-#channelStage {
-  position: absolute;
-  inset: 0;
-}
-
-/* Packet Bubbles */
+/* Packet bubbles */
 .pkt {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   color: white;
   font-size: 12px;
   font-weight: 600;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transition: opacity 0.3s ease, transform 0.2s ease;
 }
 
 .pkt:hover {
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 
-/* Event Log */
+/* Event log */
 #events {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
-  padding: 8px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 10px;
   height: 180px;
   overflow-y: auto;
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: "Consolas", monospace;
   font-size: 13px;
-  color: #2b3d4a;
+  color: #1f3a4b;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Scrollbar aesthetic */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 /* Footer */
 footer {
   text-align: center;
-  margin: 30px auto;
-  max-width: 900px;
-  color: #314a5a;
+  margin: 35px auto;
+  color: #2d485a;
   font-size: 14px;
-  opacity: 0.8;
-  letter-spacing: 0.2px;
+  opacity: 0.85;
+  letter-spacing: 0.3px;
 }
 
 .hidden {
