@@ -1,200 +1,137 @@
-/* Go-Back-N ARQ — Sleek Dark Cinematic Edition 🌌 */
-/* Created by Sunesh Krishnan N & Aravind G | Guided by Dr. Swaminathan Annadurai */
+// Go-Back-N ARQ — Cosmic Edition 🌌
+// Sender (Left) → Receiver (Right)
+// Frames move right, ACKs move left with glow animation
+// Created by Sunesh Krishnan N & Aravind G | Guided by Dr. Swaminathan Annadurai
 
-* {
-  box-sizing: border-box;
-  font-family: "Segoe UI", "Roboto", sans-serif;
-}
+(function(){
+  const $ = s => document.querySelector(s);
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  const log = m => {
+    const d=document.createElement('div');
+    d.textContent=`[${new Date().toLocaleTimeString()}] ${m}`;
+    $("#events").prepend(d);
+  };
 
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  color: #e6eefb;
-  background: radial-gradient(circle at top left, #0b1221, #0f1a33 60%, #152340 100%);
-  overflow-x: hidden;
-}
+  const createPkt = (type,label,x,y)=>{
+    const e=document.createElement('div');
+    e.className='pkt';
+    e.setAttribute('type',type);
+    e.textContent=label;
+    e.style.left=x+'px';
+    e.style.top=y+'px';
+    $("#channelStage").appendChild(e);
+    return e;
+  };
 
-/* Frosted glass panels with glow */
-.glass, header, section {
-  background: rgba(25, 33, 58, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
+  const animate = (el,x1,y1,x2,y2,ms)=>{
+    el.classList.add('travel');
+    const start=performance.now();
+    return new Promise(res=>{
+      function step(t){
+        const k=Math.min(1,(t-start)/ms);
+        const e=k<.5?2*k*k:-1+(4-2*k)*k;
+        el.style.left=(x1+(x2-x1)*e)+'px';
+        el.style.top=(y1+(y2-y1)*e)+'px';
+        if(k<1) requestAnimationFrame(step);
+        else { el.classList.remove('travel'); res(); }
+      }
+      requestAnimationFrame(step);
+    });
+  };
 
-/* Header */
-header {
-  padding: 24px;
-  margin: 22px auto;
-  max-width: 1100px;
-}
+  function ensureLabels(){
+    if($('#laneLabels')) return;
+    const wrap=document.createElement('div');
+    wrap.id='laneLabels';
+    wrap.innerHTML='<span class="tag">Sender</span><span class="tag">Receiver</span>';
+    const sim=$('#simArea');
+    sim.parentNode.insertBefore(wrap,sim);
+  }
 
-header h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 0 6px rgba(42, 107, 255, 0.5);
-}
+  function rowGeom(row){
+    const sim=$('#simArea');
+    const width=sim.clientWidth||1000;
+    const leftX=100;
+    const rightX=Math.max(250,width-120);
+    const y=100+row*80;
+    return {leftX,rightX,y};
+  }
 
-header p {
-  margin: 6px 0 16px;
-  color: #a8b5d8;
-  font-size: 15px;
-}
+  async function startSim(){
+    $("#channelStage").innerHTML="";
+    $("#events").innerHTML="";
+    ensureLabels();
 
-/* Controls Grid */
-.controls {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
+    const total=parseInt($("#numFrames").value)||8;
+    const N=parseInt($("#winSize").value)||4;
+    const lossP=parseInt($("#lossPercent").value)||10;
+    const timeout=parseInt($("#timeout").value)||6000;
+    const ackLossP=parseInt($("#ackLossPercent")?.value||"5");
+    const delay=parseInt($("#ackDelayMs")?.value||"700");
 
-.controls label {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-  color: #cbd5f0;
-}
+    const pLoss=lossP/100;
+    const pAckLoss=ackLossP/100;
 
-.controls input,
-.controls select {
-  margin-top: 4px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f5f9ff;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
+    let base=0,next=0,timer=null;
 
-.controls input:focus,
-.controls select:focus {
-  border-color: #3f80ff;
-  box-shadow: 0 0 0 3px rgba(63, 128, 255, 0.3);
-}
+    function startTimer(){
+      clearTimer();
+      timer=setTimeout(async()=>{
+        if(base<next){
+          log(`⏳ Timeout at base ${base} → retransmitting ${base}..${next-1}`);
+          for(let s=base;s<next;s++){ await sendFrame(s,true); }
+          startTimer();
+        }
+      },timeout);
+    }
+    function clearTimer(){ if(timer){ clearTimeout(timer); timer=null; } }
 
-/* Range sliders */
-input[type="range"] {
-  accent-color: #4a8cff;
-  cursor: pointer;
-}
+    async function sendFrame(seq,rtx=false){
+      const {leftX,rightX,y}=rowGeom(seq);
+      const lost=Math.random()<pLoss;
+      const f=createPkt(lost?'lost':'frame','F'+seq,leftX,y);
+      log(`${rtx?'RTX ':'Send '}Frame ${seq}${lost?' ❌ (lost)':''}`);
+      await animate(f,leftX,y,rightX,y,2600);
+      if(lost){ f.style.opacity=.4; await sleep(300); f.remove(); return false; }
+      f.remove();
+      const recv=createPkt('frame','F'+seq,rightX,y); recv.style.opacity=.8;
+      await sleep(400); recv.remove();
+      const ackLost=Math.random()<pAckLoss;
+      const ack=createPkt(ackLost?'lost':'ack','A'+seq,rightX,y);
+      await sleep(delay);
+      await animate(ack,rightX,y,leftX,y,2000);
+      if(ackLost){ log(`ACK ${seq} lost ❌`); ack.style.opacity=.4; await sleep(200); ack.remove(); return false; }
+      ack.remove();
+      handleAck(seq);
+      return true;
+    }
 
-/* Buttons */
-button {
-  background: linear-gradient(90deg, #264eff, #007fff);
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  padding: 8px 16px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+    function handleAck(n){
+      if(n>=base){
+        base=n+1;
+        log(`✅ ACK ${n} received — window slides to ${base}`);
+        if(base===next) clearTimer(); else startTimer();
+      }
+    }
 
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(63, 128, 255, 0.4);
-}
+    log(`▶️ Go-Back-N started (Frames=${total}, N=${N}, Loss=${lossP}%, ACK Loss=${ackLossP}%)`);
+    while(base<total){
+      while(next<base+N && next<total){
+        await sendFrame(next);
+        next++;
+        if(base===next-1) startTimer();
+        await sleep(200);
+      }
+      await sleep(100);
+    }
+    clearTimer();
+    log('🏁 Simulation complete.');
+  }
 
-button:active {
-  transform: translateY(0);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Simulation Area */
-#simArea {
-  position: relative;
-  overflow-y: auto;
-  height: 750px;
-  transition: height 0.4s ease;
-  scroll-behavior: smooth;
-  background: rgba(20, 25, 45, 0.55);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.4);
-}
-
-/* Packet bubbles */
-.pkt {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-  transition: opacity 0.3s ease, transform 0.2s ease;
-}
-
-.pkt:hover {
-  transform: scale(1.1);
-}
-
-.pkt[type="frame"] {
-  background: #2a6bff;
-  box-shadow: 0 0 12px rgba(42, 107, 255, 0.7);
-}
-
-.pkt[type="ack"] {
-  background: #1faa8a;
-  box-shadow: 0 0 10px rgba(31, 170, 138, 0.6);
-}
-
-.pkt[type="lost"] {
-  background: #ff5555;
-  box-shadow: 0 0 10px rgba(255, 85, 85, 0.5);
-}
-
-/* Event Log */
-#events {
-  background: rgba(25, 35, 60, 0.55);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 10px;
-  height: 180px;
-  overflow-y: auto;
-  font-family: "Consolas", monospace;
-  font-size: 13px;
-  color: #b9c7e8;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* Footer */
-footer {
-  text-align: center;
-  margin: 30px auto;
-  color: #9db1de;
-  font-size: 14px;
-  opacity: 0.85;
-  letter-spacing: 0.3px;
-}
-
-.hidden {
-  display: none !important;
-}
+  $("#startBtn").onclick=startSim;
+  $("#resetBtn").onclick=()=>{
+    $("#channelStage").innerHTML="";
+    $("#events").innerHTML="";
+    log('Reset complete.');
+  };
+})();
