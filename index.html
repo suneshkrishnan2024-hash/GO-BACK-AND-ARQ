@@ -1,134 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Go-Back-N — Glass Simulator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go-Back-N ARQ Simulator</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="glass top">
-      <div class="title">
-        <h1>Go-Back-N ARQ — Glass Simulator</h1>
-        <p class="muted">Vertical flow • packets move down, ACKs move up • summary shown after run</p>
-      </div>
-      <div class="controls-grid">
-        <label>Number of frames
-          <input id="numFrames" type="number" min="1" max="200" value="20">
-        </label>
-
-        <label>Window size (N)
-          <input id="winSize" type="number" min="1" max="20" value="4">
-        </label>
-
-        <label>Timeout (ms)
-          <input id="timeout" type="number" min="100" value="1200">
-        </label>
-
-        <label>Loss %
-          <input id="lossPercent" type="range" min="0" max="80" value="15">
-          <span id="lossPercentVal">15%</span>
-        </label>
-
-        <label>Frame Loss Mode
-          <select id="lossMode">
-            <option value="random">Random</option>
-            <option value="specific">Specific frame(s)</option>
-            <option value="everyk">Every k-th frame</option>
-            <option value="none">None</option>
-          </select>
-        </label>
-
-        <label id="specificFrameLabel" class="hidden">Specific frames (comma)
-          <input id="specificFrames" type="text" placeholder="e.g. 3,7,9">
-        </label>
-
-        <label id="everyKLabel" class="hidden">k (every k-th)
-          <input id="everyK" type="number" min="1" value="3">
-        </label>
-
-        <label>Frame Delay Mode
-          <select id="frameDelayMode">
-            <option value="none">None</option>
-            <option value="specific">Delay specific frame</option>
-            <option value="everyk">Delay every k-th frame</option>
-          </select>
-        </label>
-
-        <label id="frameDelayLabel" class="hidden">Delay frame # / k
-          <input id="frameDelaySpec" type="text" placeholder="e.g. 5 or 3">
-        </label>
-
-        <label>Frame delay (ms)
-          <input id="frameDelayMs" type="number" min="0" value="800">
-        </label>
-
-        <label>ACK Loss %
-          <input id="ackLossPercent" type="range" min="0" max="80" value="5">
-          <span id="ackLossVal">5%</span>
-        </label>
-
-        <label>ACK Delay (ms)
-          <input id="ackDelayMs" type="number" min="0" value="300">
-        </label>
-
-      </div>
-
-      <div class="buttons">
-        <button id="startBtn">Start</button>
-        <button id="pauseBtn">Pause</button>
-        <button id="stepBtn">Step</button>
-        <button id="resetBtn">Reset</button>
-        <label class="mini-toggle"><input id="autoSend" type="checkbox" checked> Auto send</label>
-      </div>
-    </header>
-
-    <main class="sim">
-      <section class="lane glass" id="senderLane">
-        <h3>Sender</h3>
-        <div class="sender-window" id="senderWindow"></div>
-        <div class="sender-queue" id="senderQueue"></div>
-      </section>
-
-      <section class="channel glass" id="channelLane">
-        <div class="channel-track" id="channelTrack">
-          <!-- packets and acks appear here -->
-        </div>
-      </section>
-
-      <section class="lane glass" id="receiverLane">
-        <h3>Receiver</h3>
-        <div class="recv-area" id="recvArea"></div>
-      </section>
-    </main>
-
-    <aside class="log glass" id="logPanel">
-      <h4>Events</h4>
-      <div id="events"></div>
-    </aside>
-
-    <section id="statsWrap" class="glass hidden">
-      <h3>Summary & Statistics</h3>
-      <div class="stats-grid">
-        <div>Total original frames: <span id="stat_totalFrames">0</span></div>
-        <div>Total transmissions (incl retransmissions): <span id="stat_totalTrans">0</span></div>
-        <div>Total ACKs received: <span id="stat_totalAcks">0</span></div>
-        <div>Frames lost: <span id="stat_framesLost">0</span></div>
-        <div>ACKs lost: <span id="stat_acksLost">0</span></div>
-        <div>Frames delayed: <span id="stat_framesDelayed">0</span></div>
-        <div>Efficiency %: <span id="stat_efficiency">0</span></div>
-        <div>Loss %: <span id="stat_lossPercent">0</span></div>
-      </div>
-      <div class="flow-diagram" id="flowDiagramWrap">
-        <h4>Flow Diagram (final)</h4>
-        <div id="flowDiagram"></div>
-      </div>
-    </section>
-
-    <footer class="glass foot">Made for CN project — Go-Back-N mode (glass theme)</footer>
-  </div>
-
+  <div id="app"></div>
   <script src="js/app.js"></script>
 </body>
 </html>
