@@ -2,12 +2,258 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Go-Back-N ARQ Simulator</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Go-Back-N ARQ — Teaching Simulator</title>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <!-- HEADER -->
+    <header class="glass header">
+      <div class="header-top">
+        <h1>Go-Back-N ARQ — Visual Simulator</h1>
+        <nav class="header-actions">
+          <button class="btn pill" id="btnLearn">Learn</button>
+          <button class="btn pill" id="btnDev">Developed By</button>
+          <button class="btn pill" id="btnHelp">Help</button>
+          <button class="btn pill" id="btnDownload">Download</button>
+        </nav>
+      </div>
+      <p class="tagline">
+        Sliding window, cumulative ACKs; timeout ⇒ retransmit from base. ACKs only after arrival.
+      </p>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section class="glass controls-wrap">
+      <div class="controls-grid">
+        <label>Number of frames
+          <input id="numFrames" type="number" min="1" max="300" value="10"/>
+        </label>
+
+        <label>Window size (N)
+          <input id="winSize" type="number" min="1" max="32" value="4"/>
+        </label>
+
+        <label>Timeout (ms)
+          <input id="timeout" type="number" min="2000" max="60000" value="6000"/>
+        </label>
+
+        <label>Frame Loss %
+          <input id="lossPercent" type="range" min="0" max="80" value="15"/>
+          <span class="inline-val" id="lossPercentVal">15%</span>
+        </label>
+
+        <label>Frame Loss Mode
+          <select id="lossMode">
+            <option value="random">Random (by %)</option>
+            <option value="specific">Specific frame(s)</option>
+            <option value="everyk">Every k-th</option>
+            <option value="none">None</option>
+          </select>
+        </label>
+
+        <label id="wrapSpecific" class="hidden">Specific frames (comma)
+          <input id="specificFrames" type="text" placeholder="e.g. 2,7,9"/>
+        </label>
+
+        <label id="wrapEveryK" class="hidden">k (every k-th)
+          <input id="everyK" type="number" min="1" value="3"/>
+        </label>
+
+        <label>Frame Delay Mode
+          <select id="frameDelayMode">
+            <option value="none">None</option>
+            <option value="specific">Delay specific frame(s)</option>
+            <option value="everyk">Delay every k-th</option>
+          </select>
+        </label>
+
+        <label id="wrapDelaySpec" class="hidden">Delay frame # / k
+          <input id="frameDelaySpec" type="text" placeholder="e.g. 5 or 3"/>
+        </label>
+
+        <label id="wrapDelayMs" class="hidden">Frame delay (ms)
+          <input id="frameDelayMs" type="number" min="0" value="1200"/>
+        </label>
+
+        <label>ACK Loss %
+          <input id="ackLossPercent" type="range" min="0" max="80" value="5"/>
+          <span class="inline-val" id="ackLossVal">5%</span>
+        </label>
+
+        <label>ACK Loss Mode
+          <select id="ackLossMode">
+            <option value="random">Random (by %)</option>
+            <option value="specific">Specific ACK(s)</option>
+            <option value="everyk">Every k-th ACK</option>
+            <option value="none">None</option>
+          </select>
+        </label>
+
+        <label id="wrapAckSpec" class="hidden">Specific ACK # (comma)
+          <input id="ackSpecific" type="text" placeholder="e.g. 0,3,7"/>
+        </label>
+
+        <label id="wrapAckK" class="hidden">k (every k-th ACK)
+          <input id="ackEveryK" type="number" min="1" value="3"/>
+        </label>
+
+        <label>ACK Delay (ms)
+          <input id="ackDelayMs" type="number" min="0" value="800"/>
+        </label>
+
+        <label>Simulation Mode
+          <select id="simMode">
+            <option value="textbook">Textbook diagonals (draw + move)</option>
+            <option value="vertical">Vertical columns (draw + move)</option>
+            <option value="replay">Animated replay (summary only)</option>
+          </select>
+        </label>
+
+        <label>Summary Diagram
+          <select id="diagramType">
+            <option value="vertical">Vertical two-columns</option>
+            <option value="textbook">Textbook diagonals</option>
+            <option value="animated">Animated replay</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="controls-actions">
+        <button class="btn primary" id="startBtn">Start</button>
+        <button class="btn" id="stepBtn">Step</button>
+        <button class="btn danger" id="resetBtn">Reset</button>
+      </div>
+    </section>
+
+    <!-- SIMULATION -->
+    <section class="glass sim-shell">
+      <div class="lanes">
+        <div class="lane">
+          <h3>Sender</h3>
+          <div id="senderWindow" class="window"></div>
+          <div id="senderQueue" class="queue"></div>
+        </div>
+
+        <div class="channel">
+          <svg id="liveSvg" width="100%" height="100%"></svg>
+          <div id="channelStage"></div>
+          <div class="axis axis-left">Sender</div>
+          <div class="axis axis-right">Receiver</div>
+        </div>
+
+        <div class="lane">
+          <h3>Receiver</h3>
+          <div id="recvArea" class="recv"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVENT LOG -->
+    <section class="glass log-shell">
+      <h3>Event Log</h3>
+      <div id="events" class="log"></div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section class="glass hidden" id="statsWrap">
+      <h3>📊 Simulation Results</h3>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Total original frames</div><div class="stat-value" id="stat_totalFrames">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total transmissions</div><div class="stat-value" id="stat_totalTrans">0</div></div>
+        <div class="stat-card"><div class="stat-label">Frames delivered</div><div class="stat-value" id="stat_delivered">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total ACKs generated</div><div class="stat-value" id="stat_totalAcks">0</div></div>
+        <div class="stat-card"><div class="stat-label">Frames lost</div><div class="stat-value" id="stat_framesLost">0</div></div>
+        <div class="stat-card"><div class="stat-label">ACKs lost</div><div class="stat-value" id="stat_acksLost">0</div></div>
+        <div class="stat-card"><div class="stat-label">Frames delayed</div><div class="stat-value" id="stat_framesDelayed">0</div></div>
+        <div class="stat-card"><div class="stat-label">Efficiency</div><div class="stat-value" id="stat_efficiency">0%</div></div>
+        <div class="stat-card"><div class="stat-label">Frames / second</div><div class="stat-value" id="stat_fps">0</div></div>
+      </div>
+
+      <div class="diagram-wrap">
+        <h4>Flow Diagram (<span id="diagramModeLabel">Vertical two-columns</span>)</h4>
+        <div id="diagramHost" class="diagram-host glass-lite"></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Created by <b>Sunesh Krishnan N</b> (24BCE1925) & <b>Aravind G</b> (24BCE1293) · Guided by <b>Dr. Swaminathan Annadurai</b>
+    </footer>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal hidden" id="modalLearn">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Learn: Go-Back-N ARQ (Quick Primer)</h3>
+        <button class="icon-btn" data-close="modalLearn">✕</button>
+      </div>
+      <div class="modal-body">
+        <p><b>Idea:</b> Sender can have up to <i>N</i> unacknowledged frames “in flight”. If a timeout happens, it retransmits from the <i>base</i> (the oldest un-ACKed frame). Receiver sends <b>cumulative ACKs</b> (ACK k ⇒ received all ≤ k).</p>
+        <ul class="bullets">
+          <li><b>Window:</b> [base … nextSeq-1]</li>
+          <li><b>Timeout:</b> No ACK for base before timer ⇒ resend base..nextSeq-1</li>
+          <li><b>Loss/Delay:</b> We can inject losses and delays for frames and ACKs</li>
+        </ul>
+
+        <div class="video">
+          <!-- Replace with any educational ARQ video you prefer -->
+          <iframe width="560" height="315"
+            src="https://www.youtube.com/embed/Q1jZsQv2Z5g"
+            title="Go-Back-N ARQ Explained Visually" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="modalDev">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Developed By</h3>
+        <button class="icon-btn" data-close="modalDev">✕</button>
+      </div>
+      <div class="modal-body dev-grid">
+        <div class="dev-prof">
+          <img src="img/professor.jpg" alt="Dr. Swaminathan Annadurai"/>
+          <div class="dev-caption">
+            <b>Dr. Swaminathan Annadurai</b><br/>Professor & Guide
+          </div>
+        </div>
+
+        <div class="dev-card">
+          <div class="dev-name">Sunesh Krishnan N</div>
+          <div class="dev-reg">Reg No: 24BCE1925</div>
+        </div>
+
+        <div class="dev-card">
+          <div class="dev-name">Aravind G</div>
+          <div class="dev-reg">Reg No: 24BCE1293</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="modalHelp">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Help</h3>
+        <button class="icon-btn" data-close="modalHelp">✕</button>
+      </div>
+      <div class="modal-body">
+        <ol class="steps">
+          <li>Pick <b>Number of frames</b>, <b>Window size</b>, and <b>Timeout</b>.</li>
+          <li>Optionally set <b>loss</b> and <b>delay</b> modes for frames and ACKs.</li>
+          <li>Press <b>Start</b>. Watch frames travel (down-right). ACKs travel back (up-left).</li>
+          <li>On timeout, the sender retransmits from <b>base</b> — you’ll see “RTX” lines.</li>
+          <li>Event Log explains each step. Results & diagram appear at the end.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
   <script src="js/app.js"></script>
 </body>
 </html>
