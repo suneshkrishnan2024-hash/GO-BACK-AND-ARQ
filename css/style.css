@@ -59,6 +59,12 @@ body{
   padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.28);
   background:rgba(255,255,255,0.12);color:var(--text);outline:none;
 }
+/* --- Dropdown (fix for invisible options) --- */
+select option {
+  background-color: #0a0f1f; /* dark background, matches theme */
+  color: #eafaff;           /* light text so it’s visible */
+}
+
 .controls-grid input::placeholder{color:#cfe8ffaa}
 .controls-grid select:focus,
 .controls-grid input:focus{box-shadow:0 0 0 2px rgba(0,255,255,0.35)}
