@@ -490,9 +490,18 @@ async function onTimeout(){
   }
 
   function renderDiagram(host, diag, rows, mode){
-    if(mode==="textbook") return renderTextbook(host, diag, rows);
-    return renderVertical(host, diag, rows);
+  // Ensure frames drawn first, ACKs after
+  const ordered = {
+    frames: diag.frames.slice(),
+    acks: diag.acks.slice()
+  };
+  if(mode === "textbook") {
+    renderTextbook(host, ordered, rows);
+  } else {
+    renderVertical(host, ordered, rows);
   }
+}
+
 
   // ========= Controls =========
   startBtn.addEventListener("click", async ()=>{
@@ -529,9 +538,20 @@ stepBtn.addEventListener("click", async ()=>{
   btnHelp.addEventListener("click", ()=> open(modalHelp));
   closeBtns.forEach(b=> b.addEventListener("click", ()=> close($("#"+b.dataset.close))));
 
-  // Download: dump a simple JSON report + log
-  btnDownload.addEventListener("click", ()=>{
-  // collect input settings
+  // ========= Download TXT + PNG as ZIP =========
+btnDownload.addEventListener("click", async () => {
+  // Check if simulation started
+  if (!startTime) {
+    alert("Simulation hasn’t started yet. Please start and complete the process before downloading.");
+    return;
+  }
+  // Check if simulation still running
+  if (running) {
+    alert("Simulation is still running. Please wait until it completes to download the report.");
+    return;
+  }
+
+  // Collect input settings
   const data = {
     frames: numFramesEl.value,
     window: winSizeEl.value,
@@ -539,12 +559,12 @@ stepBtn.addEventListener("click", async ()=>{
     frameLoss: `${lossModeEl.value} (${lossPercentEl.value}%)`,
     frameDelay: `${frameDelayModeEl.value} (${frameDelayMsEl.value} ms)`,
     ackLoss: `${ackLossModeEl.value} (${ackLossPercentEl.value}%)`,
-    ackDelay: `${ackDelayMsEl.value} ms`
+    ackDelay: `${ackDelayMsEl.value} ms`,
   };
 
-  // grab simulation stats
+  // Text summary
   const summary = `
-📘 GO-BACK-N ARQ SIMULATION SUMMARY
+GO-BACK-N ARQ SIMULATION REPORT
 -----------------------------------
 Developed by: Sunesh Krishnan N & Aravind G
 Guided by: Dr. Swaminathan Annadurai
@@ -574,17 +594,42 @@ RESULTS:
 EVENT LOG:
 -----------
 ${[...document.querySelectorAll("#events div")]
-   .map(d => d.textContent)
-   .join("\n")}
+  .map(d => d.textContent)
+  .join("\n")}
+
 -----------------------------------
 `;
 
-  const blob = new Blob([summary], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "GBN_Simulation_Report.txt";
-  a.click();
-  URL.revokeObjectURL(a.href);
+  // Convert diagram SVG → PNG
+  const svgEl = diagramHost.querySelector("svg");
+  if (!svgEl) {
+    alert("No summary diagram found. Please complete a simulation first.");
+    return;
+  }
+  const svgData = new XMLSerializer().serializeToString(svgEl);
+  const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.src = svgUrl;
+
+  img.onload = async () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    canvas.toBlob(async (pngBlob) => {
+      const zip = new JSZip();
+      zip.file("GBN_Simulation_Report.txt", summary);
+      zip.file("GBN_Summary_Diagram.png", pngBlob);
+
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "GBN_Simulation_Report.zip");
+      URL.revokeObjectURL(svgUrl);
+    }, "image/png");
+  };
 });
 
   // ========= Boot =========

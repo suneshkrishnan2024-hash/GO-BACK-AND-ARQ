@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Go-Back-N ARQ — Teaching Simulator</title>
   <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
   <div id="app">
@@ -26,99 +28,107 @@
 
     <!-- DASHBOARD -->
     <section class="glass controls-wrap">
-      <div class="controls-grid">
-        <label>Number of frames
-          <input id="numFrames" type="number" min="1" max="300" value="10"/>
-        </label>
+     <div class="controls-grid">
 
-        <label>Window size (N)
-          <input id="winSize" type="number" min="1" max="32" value="4"/>
-        </label>
+  <!-- GENERAL SETTINGS -->
+  <label>Number of Frames
+    <input id="numFrames" type="number" min="1" max="300" value="10"/>
+  </label>
 
-        <label>Timeout (ms)
-          <input id="timeout" type="number" min="2000" max="60000" value="6000"/>
-        </label>
+  <label>Window Size (N)
+    <input id="winSize" type="number" min="1" max="32" value="4"/>
+  </label>
 
-        <label>Frame Loss %
-          <input id="lossPercent" type="range" min="0" max="80" value="15"/>
-          <span class="inline-val" id="lossPercentVal">15%</span>
-        </label>
+  <label>Timeout (ms)
+    <input id="timeout" type="number" min="2000" max="60000" value="6000"/>
+  </label>
 
-        <label>Frame Loss Mode
-          <select id="lossMode">
-            <option value="random">Random (by %)</option>
-            <option value="specific">Specific frame(s)</option>
-            <option value="everyk">Every k-th</option>
-            <option value="none">None</option>
-          </select>
-        </label>
+  <!-- FRAME SETTINGS -->
+  <label>Frame Loss %
+    <input id="lossPercent" type="range" min="0" max="80" value="15"/>
+    <span class="inline-val" id="lossPercentVal">15%</span>
+  </label>
 
-        <label id="wrapSpecific" class="hidden">Specific frames (comma)
-          <input id="specificFrames" type="text" placeholder="e.g. 2,7,9"/>
-        </label>
+  <label>Frame Loss Mode
+    <select id="lossMode">
+      <option value="random">Random (by %)</option>
+      <option value="specific">Specific frame(s)</option>
+      <option value="everyk">Every k-th</option>
+      <option value="none">None</option>
+    </select>
+  </label>
 
-        <label id="wrapEveryK" class="hidden">k (every k-th)
-          <input id="everyK" type="number" min="1" value="3"/>
-        </label>
+  <label id="wrapSpecific" class="hidden">Specific Frames (comma)
+    <input id="specificFrames" type="text" placeholder="e.g. 2,7,9"/>
+  </label>
 
-        <label>Frame Delay Mode
-          <select id="frameDelayMode">
-            <option value="none">None</option>
-            <option value="specific">Delay specific frame(s)</option>
-            <option value="everyk">Delay every k-th</option>
-          </select>
-        </label>
+  <label id="wrapEveryK" class="hidden">k (every k-th)
+    <input id="everyK" type="number" min="1" value="3"/>
+  </label>
 
-        <label id="wrapDelaySpec" class="hidden">Delay frame # / k
-          <input id="frameDelaySpec" type="text" placeholder="e.g. 5 or 3"/>
-        </label>
+  <label>Frame Delay Mode
+    <select id="frameDelayMode">
+      <option value="none">None</option>
+      <option value="specific">Delay specific frame(s)</option>
+      <option value="everyk">Delay every k-th</option>
+    </select>
+  </label>
 
-        <label id="wrapDelayMs" class="hidden">Frame delay (ms)
-          <input id="frameDelayMs" type="number" min="0" value="1200"/>
-        </label>
+  <label id="wrapDelaySpec" class="hidden">Delay Frame # / k
+    <input id="frameDelaySpec" type="text" placeholder="e.g. 5 or 3"/>
+  </label>
 
-        <label>ACK Loss %
-          <input id="ackLossPercent" type="range" min="0" max="80" value="5"/>
-          <span class="inline-val" id="ackLossVal">5%</span>
-        </label>
+  <label id="wrapDelayMs" class="hidden">Frame Delay (ms)
+    <input id="frameDelayMs" type="number" min="0" value="1200"/>
+  </label>
 
-        <label>ACK Loss Mode
-          <select id="ackLossMode">
-            <option value="random">Random (by %)</option>
-            <option value="specific">Specific ACK(s)</option>
-            <option value="everyk">Every k-th ACK</option>
-            <option value="none">None</option>
-          </select>
-        </label>
+  <!-- ACK SETTINGS -->
+  <label>ACK Loss %
+    <input id="ackLossPercent" type="range" min="0" max="80" value="5"/>
+    <span class="inline-val" id="ackLossVal">5%</span>
+  </label>
 
-        <label id="wrapAckSpec" class="hidden">Specific ACK # (comma)
-          <input id="ackSpecific" type="text" placeholder="e.g. 0,3,7"/>
-        </label>
+  <label>ACK Loss Mode
+    <select id="ackLossMode">
+      <option value="random">Random (by %)</option>
+      <option value="specific">Specific ACK(s)</option>
+      <option value="everyk">Every k-th ACK</option>
+      <option value="none">None</option>
+    </select>
+  </label>
 
-        <label id="wrapAckK" class="hidden">k (every k-th ACK)
-          <input id="ackEveryK" type="number" min="1" value="3"/>
-        </label>
+  <label id="wrapAckSpec" class="hidden">Specific ACK # (comma)
+    <input id="ackSpecific" type="text" placeholder="e.g. 0,3,7"/>
+  </label>
 
-        <label>ACK Delay (ms)
-          <input id="ackDelayMs" type="number" min="0" value="800"/>
-        </label>
+  <label id="wrapAckK" class="hidden">k (every k-th ACK)
+    <input id="ackEveryK" type="number" min="1" value="3"/>
+  </label>
 
-        <label>Simulation Mode
-          <select id="simMode">
-            <option value="textbook">Textbook diagonals (draw + move)</option>
-            <option value="vertical">Vertical columns (draw + move)</option>
-            <option value="replay">Animated replay (summary only)</option>
-          </select>
-        </label>
+  <label>ACK Delay (ms)
+    <input id="ackDelayMs" type="number" min="0" value="800"/>
+  </label>
 
-        <label>Summary Diagram
-          <select id="diagramType">
-            <option value="vertical">Vertical two-columns</option>
-            <option value="textbook">Textbook diagonals</option>
-            <option value="animated">Animated replay</option>
-          </select>
-        </label>
-      </div>
+  <!-- SIMULATION & DIAGRAM -->
+  <label>Simulation Mode
+    <select id="simMode">
+      <option value="textbook">Textbook diagonals (draw + move)</option>
+      <option value="vertical">Vertical columns (draw + move)</option>
+      <option value="replay">Animated replay (summary only)</option>
+    </select>
+  </label>
+
+  <label>Summary Diagram
+    <select id="diagramType">
+      <option value="vertical">Vertical two-columns</option>
+      <option value="textbook">Textbook diagonals</option>
+      <option value="animated">Animated replay</option>
+    </select>
+  </label>
+
+</div>
+ss
+
 
       <div class="controls-actions">
         <button class="btn primary" id="startBtn">Start</button>
