@@ -194,3 +194,67 @@ select option {
   from { transform: translateY(-12px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+/* --- Developer Upload Area (for photos) --- */
+.dev-upload {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dev-upload label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.dev-upload input[type="file"] {
+  margin-top: 4px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.dev-upload input[type="file"]::-webkit-file-upload-button {
+  background: linear-gradient(180deg,#0ef,#00b8ff);
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: #01242d;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 8px;
+  box-shadow: 0 4px 10px rgba(0,255,255,0.25);
+}
+/* Developer photos layout */
+.dev-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px; /* spacing between cards */
+  align-items: start;
+  text-align: center;
+}
+
+/* Photo sizing */
+.dev-photo,
+.dev-prof img {
+  width: 120px;        /* smaller size */
+  height: 120px;
+  object-fit: cover;   /* perfect crop without stretching */
+  border-radius: 12px;
+  margin: 0 auto 10px; /* center + space below */
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 0 12px rgba(0,255,255,0.25);
+}
+.dev-card, .dev-prof {
+  padding: 10px 0;
+}
